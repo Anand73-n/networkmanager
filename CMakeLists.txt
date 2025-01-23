@@ -143,6 +143,7 @@ if(ENABLE_GNOME_NETWORKMANAGER)
     endif()
 else()
     message("networkmanager building with netsrvmgr")
+    add_definitions(-DENABLE_GET_WIFI_CREDENTIALS)
     target_sources(${MODULE_NAME} PRIVATE NetworkManagerRDKProxy.cpp)
     target_include_directories(${MODULE_NAME} PRIVATE ${IARMBUS_INCLUDE_DIRS})
     target_link_libraries(${MODULE_NAME} PRIVATE ${IARMBUS_LIBRARIES})
@@ -183,6 +184,10 @@ add_library(${PLUGIN_LEGACY_DEPRECATED_WIFI} SHARED
         NetworkManagerLogger.cpp
         Module.cpp
 )
+if (ENABLE_GET_WIFI_CREDENTIALS)
+target_include_directories(${PLUGIN_LEGACY_DEPRECATED_WIFI} PRIVATE ${IARMBUS_INCLUDE_DIRS})
+target_link_libraries(${PLUGIN_LEGACY_DEPRECATED_WIFI}  PRIVATE ${IARMBUS_LIBRARIES})
+endif()
 
 target_link_libraries(${PLUGIN_LEGACY_DEPRECATED_WIFI}  PRIVATE
                                         ${NAMESPACE}Core::${NAMESPACE}Core
