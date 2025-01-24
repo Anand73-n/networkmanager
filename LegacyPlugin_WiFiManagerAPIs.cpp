@@ -614,16 +614,17 @@ namespace WPEFramework
         uint32_t WiFiManager::retrieveSSID (const JsonObject& parameters, JsonObject& response)
         {
             uint32_t rc = Core::ERROR_GENERAL;
+            LOG_INPARAM();
             std::string line;
             std::string securityPattern = "key_mgmt=";
             std::string ssidPattern = "ssid=";
             std::string passphrasePattern = "psk=";
             std::string security, ssid, passphrase;
-
             std::ifstream configFile(WPA_SUPPLICANT_CONF);
+
             if (!configFile.is_open())
             {
-                NMLOG_ERROR("Not able to open the file %s", WPA_SUPPLICANT_CONF);
+                NMLOG_INFO("Not able to open the file %s", WPA_SUPPLICANT_CONF);
                 response["success"] = false;
                 rc = Core::ERROR_NOT_EXIST;
                 return rc;
@@ -631,22 +632,25 @@ namespace WPEFramework
 
             while (std::getline(configFile, line))
             {
-                NMLOG_DEBUG("Attempting to read the configuration to populate SSID specific information");
+                NMLOG_INFO("line %s", line.c_str());
+                NMLOG_INFO("Attempting to read the configuration to populate SSID specific information");
                 size_t pos;
 
                 // Fetch ssid value
-                pos = line.find(ssidPattern);
-                if (pos != std::string::npos)
-                {
-                    pos += ssidPattern.length();
-                    size_t end = line.find('"', pos + 1);
-                    if (end == std::string::npos)
+                if (ssid.empty()) {
+                    pos = line.find(ssidPattern);
+                    if (pos != std::string::npos)
                     {
-                        end = line.length();
+                        pos += ssidPattern.length();
+                        size_t end = line.find('"', pos + 1);
+                        if (end == std::string::npos)
+                        {
+                            end = line.length();
+                        }
+                        ssid = line.substr(pos + 1, end - pos - 1);
+                        NMLOG_INFO("SSID found %s", ssid.c_str());
+                        continue;
                     }
-                    ssid = line.substr(pos + 1, end - pos - 1);
-                    NMLOG_DEBUG("SSID found");
-                    continue;
                 }
 
                 if (!ssid.empty()) {
@@ -676,10 +680,11 @@ namespace WPEFramework
                         }
                         passphrase = line.substr(pos + 1, end - pos - 1);
                     }
-                    NMLOG_DEBUG("Fetched SSID = %s, security = %s", ssid.c_str(), security.c_str());
+                    NMLOG_INFO("Fetched SSID = %s, security = %s", ssid.c_str(), security.c_str());
                 }
             }
             configFile.close();
+            NMLOG_INFO("Fetch SSID = %s, security = %s", ssid.c_str(), security.c_str());
             if (!ssid.empty())
             {
                 response["ssid"] = ssid;
